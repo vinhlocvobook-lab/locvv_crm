@@ -152,6 +152,11 @@ Tài liệu này mô tả kiến trúc kỹ thuật chi tiết của hệ thốn
 
 ## 8. Socket.io Architecture
 - **Namespace:** Sử dụng default namespace hoặc `/quotes`.
+- **Phạm vi sử dụng:** 
+    - Thông báo trạng thái báo giá realtime.
+    - Cảnh báo vi phạm SLA.
+    - Chat thread nội bộ (internal comments).
+    - **Lưu ý:** KHÔNG dùng Socket.io cho tín hiệu cuộc gọi (signaling) nếu sử dụng SIP trực tiếp.
 - **Room structure:**
     - `tenant:{tenant_id}`: Thông báo chung toàn công ty.
     - `quote:{quote_id}`: Chat thread và cập nhật trạng thái riêng của từng báo giá.
@@ -195,32 +200,32 @@ Tài liệu này mô tả kiến trúc kỹ thuật chi tiết của hệ thốn
 
 ---
 
-## 13. VoIP / WebRTC Architecture (Phase 2)
+## 13. VoIP / SIP Architecture (Phase 2)
+
+### Tổng quan
+Hệ thống sẽ tích hợp với tổng đài **Asterisk PBX** thông qua giao thức **SIP over WebSocket**. Người dùng sẽ thực hiện cuộc gọi trực tiếp từ trình duyệt bằng công nghệ **WebRTC**.
 
 ### Call State Machine
-IDLE → CALLING → RINGING → CONNECTED → ON_HOLD → ENDED / FAILED
+IDLE → REGISTERING → REGISTERED → CALLING → RINGING → CONNECTED → ON_HOLD → ENDED / FAILED
 
 ### Công nghệ
-- **WebRTC API:** (Browser native) để truyền tải media realtime.
-- **Socket.io:** Làm Signaling Server để trao đổi offer/answer/ICE candidate giữa các peer.
-- **SIP over WebSocket:** (Tùy chọn) nếu cần tích hợp với hệ thống PBX/tổng đài truyền thống trong tương lai.
+- **JsSIP hoặc Sip.js:** Thư viện client-side để xử lý giao thức SIP trên trình duyệt.
+- **WebRTC API:** Truyền tải media (âm thanh) trực tiếp giữa trình duyệt và Asterisk.
+- **Asterisk (WSS):** Tổng đài đóng vai trò SIP Server, hỗ trợ WebSocket Secure (WSS) để nhận tín hiệu từ Web client.
 
 ### Redux callSlice quản lý
+- `registrationStatus`: Trạng thái đăng ký với tổng đài SIP (Registered/Unregistered).
 - `callState`: Trạng thái máy trạng thái cuộc gọi.
-- `localStream`: MediaStream từ mic/camera của người dùng hiện tại.
-- `remoteStream`: MediaStream nhận được từ đối phương.
-- `peerConnection`: Instance của RTCPeerConnection.
-- `isMuted`: Trạng thái bật/tắt mic.
-- `isVideoOn`: Trạng thái bật/tắt camera.
+- `localStream` / `remoteStream`: Quản lý luồng âm thanh.
+- `activeCall`: Thông tin cuộc gọi hiện tại (số điện thoại, thời lượng).
 
-### Signaling Flow qua Socket.io
-1. **Caller:** `socket.emit('call:offer', sdp)`
-2. **Callee:** Nhận `socket.on('call:incoming')`
-3. **Callee:** `socket.emit('call:answer', sdp)`
-4. **Caller:** Nhận `socket.on('call:answered')`
-5. **Cả hai:** Trao đổi ứng viên ICE qua `socket.emit/on('call:ice-candidate')`
+### Luồng tín hiệu (SIP Flow)
+1. **Register:** Client (JsSIP) gửi `REGISTER` message tới Asterisk qua WSS.
+2. **Invite:** Client gửi `INVITE` message để bắt đầu cuộc gọi.
+3. **Signaling:** Asterisk trao đổi các bản tin SIP chuẩn (100 Trying, 180 Ringing, 200 OK).
+4. **Media:** Sau khi handshake thành công, luồng RTP (âm thanh) được truyền qua WebRTC.
 
 ### Lưu ý tích hợp
-- **Dữ liệu tạm thời:** Trạng thái WebRTC (stream, peer connection) chỉ tồn tại trong bộ nhớ máy khách (Redux), KHÔNG lưu vào database server.
-- **Lịch sử cuộc gọi:** Chỉ lưu vào bảng `call_logs` (nếu có) sau khi cuộc gọi kết thúc (ENDED).
-- **Infrastructure:** Cần cấu hình STUN/TURN server trong `.env` để hỗ trợ kết nối xuyên NAT trong môi trường Internet.
+- **Security:** Thông tin tài khoản SIP (Extension/Secret) của mỗi User cần được quản lý bảo mật.
+- **NAT:** Asterisk cần được cấu hình đúng về ICE/STUN/TURN để hỗ trợ người dùng từ nhiều mạng khác nhau.
+- **Lịch sử cuộc gọi:** Hệ thống sẽ đồng bộ Call Logs từ Asterisk (CDR) về bảng `call_logs` của từng Tenant.

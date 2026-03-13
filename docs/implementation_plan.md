@@ -14,7 +14,7 @@ Tạo ra một tài liệu PRD chi tiết, chuyên nghiệp bằng tiếng Việ
 6. **Chi tiết kỹ thuật**:
     - Cơ sở dữ liệu: MariaDB với **Prisma ORM**.
     - Backend: Node.js/Express với **node-cron** (Phase 1).
-    - Frontend: React với **Zustand** và **Shadcn UI**.
+    - Frontend: React với **Redux Toolkit** và **Shadcn UI**.
     - Quản lý phiên bản (Versioning): Snapshot dựa trên JSON.
     - Chiến lược SLA: Scheduler quét định kỳ mỗi 5-15 phút.
     - Trừu tượng hóa LLM (Adapter pattern).

@@ -12,6 +12,8 @@ Theo dõi các mốc quan trọng của dự án.
 | **Phase 6: Core Features** | ⏳ Chờ | 0% | Auth, Quotes, Tenant |
 
 ## Cập nhật gần đây
+- **2026-03-13:** Điều chỉnh kiến trúc VoIP: Sử dụng SIP over WebRTC kết nối tổng đài Asterisk PBX thay vì truyền tín hiệu qua Socket.io.
+- **2026-03-13:** Giới hạn phạm vi của Socket.io chỉ cho Chat nội bộ và Notification.
 - **2026-03-13:** Quyết định chuyển State Management từ Zustand sang Redux Toolkit để hỗ trợ WebRTC Call State Machine (Phase 2).
 - **2026-03-13:** Bổ sung WebRTC/VoIP Architecture vào `ARCHITECTURE.md`.
 - **2026-03-13:** Thiết kế xong file `ARCHITECTURE.md` và `DATABASE.md`.

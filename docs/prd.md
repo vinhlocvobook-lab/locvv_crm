@@ -200,7 +200,8 @@ class OpenAIAdapter implements ILLMAdapter { ... }
 
 ### Infrastructure & Others
 - **Database:** MariaDB.
-- **Realtime:** Socket.io.
+- **Realtime:** **Socket.io** (Chỉ dành cho chat nội bộ, thông báo trạng thái báo giá và cảnh báo SLA).
+- **VoIP / Calling (Phase 2):** **SIP over WebRTC**. Kết nối với tổng đài **Asterisk PBX** để thực hiện cuộc gọi ngoại mạng và nội bộ.
 - **File Storage:**
     - **Phase 1:** Sử dụng **Local Filesystem**. Cấu trúc thư mục: `/uploads/{tenant_slug}/{category}/` (ví dụ: `/uploads/company-a/suppliers/`).
     - **Phase 2:** Tích hợp **Cloud Sync** (Google Drive / OneDrive) thay vì S3.
