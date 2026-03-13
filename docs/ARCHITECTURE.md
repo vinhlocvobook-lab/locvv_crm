@@ -92,7 +92,14 @@ Tài liệu này mô tả kiến trúc kỹ thuật chi tiết của hệ thốn
     /layouts         # AuthLayout, TenantLayout, AdminLayout
     /hooks           # Custom hooks (useQuotes, useAuth)
     /services        # API Client (Axios/Fetch wrappers)
-    /store           # Zustand slices
+    /store           # Redux store configuration
+      /slices
+        authSlice.ts      → Session, JWT, role
+        uiSlice.ts        → Sidebar, modal, theme
+        callSlice.ts      → WebRTC state machine
+        notifSlice.ts     → Notification counters
+      store.ts            → Redux store configuration
+      hooks.ts            → useAppDispatch, useAppSelector
     /utils           # Formatting, Validators
 ```
 
@@ -185,3 +192,35 @@ Tài liệu này mô tả kiến trúc kỹ thuật chi tiết của hệ thốn
     - Lưu trữ danh sách Role/Permissions để tránh truy vấn DB mỗi request.
     - Rate limiting cho API.
     - Cache dữ liệu Product Catalog cho các Tenant có lượng sản phẩm lớn.
+
+---
+
+## 13. VoIP / WebRTC Architecture (Phase 2)
+
+### Call State Machine
+IDLE → CALLING → RINGING → CONNECTED → ON_HOLD → ENDED / FAILED
+
+### Công nghệ
+- **WebRTC API:** (Browser native) để truyền tải media realtime.
+- **Socket.io:** Làm Signaling Server để trao đổi offer/answer/ICE candidate giữa các peer.
+- **SIP over WebSocket:** (Tùy chọn) nếu cần tích hợp với hệ thống PBX/tổng đài truyền thống trong tương lai.
+
+### Redux callSlice quản lý
+- `callState`: Trạng thái máy trạng thái cuộc gọi.
+- `localStream`: MediaStream từ mic/camera của người dùng hiện tại.
+- `remoteStream`: MediaStream nhận được từ đối phương.
+- `peerConnection`: Instance của RTCPeerConnection.
+- `isMuted`: Trạng thái bật/tắt mic.
+- `isVideoOn`: Trạng thái bật/tắt camera.
+
+### Signaling Flow qua Socket.io
+1. **Caller:** `socket.emit('call:offer', sdp)`
+2. **Callee:** Nhận `socket.on('call:incoming')`
+3. **Callee:** `socket.emit('call:answer', sdp)`
+4. **Caller:** Nhận `socket.on('call:answered')`
+5. **Cả hai:** Trao đổi ứng viên ICE qua `socket.emit/on('call:ice-candidate')`
+
+### Lưu ý tích hợp
+- **Dữ liệu tạm thời:** Trạng thái WebRTC (stream, peer connection) chỉ tồn tại trong bộ nhớ máy khách (Redux), KHÔNG lưu vào database server.
+- **Lịch sử cuộc gọi:** Chỉ lưu vào bảng `call_logs` (nếu có) sau khi cuộc gọi kết thúc (ENDED).
+- **Infrastructure:** Cần cấu hình STUN/TURN server trong `.env` để hỗ trợ kết nối xuyên NAT trong môi trường Internet.

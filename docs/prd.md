@@ -185,7 +185,16 @@ class OpenAIAdapter implements ILLMAdapter { ... }
 
 ### Frontend
 - **Framework:** **React** với TypeScript.
-- **State Management:** **Zustand** (Nhẹ, dễ quản lý cho quy mô 20-50 users).
+- **State Management:** **Redux Toolkit**
+  
+  **Redux Slices:**
+  - `authSlice`: User session, JWT, permissions.
+  - `uiSlice`: Sidebar, modal, theme, loading states.
+  - `callSlice`: WebRTC call state machine, local/remote streams, peer connection state, mic/camera/speaker controls.
+  - `notifSlice`: Notification badge count, unread count.
+  
+  *Lưu ý: Server state (API data) vẫn dùng TanStack Query — Redux chỉ quản lý Client State và WebRTC State.*
+
 - **UI Library:** **Tailwind CSS + Shadcn UI** (Premium, hiện đại, dễ tùy biến).
 - **Data Fetching:** **TanStack Query** (React Query) để quản lý cache và trạng thái server.
 

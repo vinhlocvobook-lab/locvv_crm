@@ -12,6 +12,8 @@ Theo dõi các mốc quan trọng của dự án.
 | **Phase 6: Core Features** | ⏳ Chờ | 0% | Auth, Quotes, Tenant |
 
 ## Cập nhật gần đây
+- **2026-03-13:** Quyết định chuyển State Management từ Zustand sang Redux Toolkit để hỗ trợ WebRTC Call State Machine (Phase 2).
+- **2026-03-13:** Bổ sung WebRTC/VoIP Architecture vào `ARCHITECTURE.md`.
 - **2026-03-13:** Thiết kế xong file `ARCHITECTURE.md` và `DATABASE.md`.
 - **2026-03-13:** Chốt phương án Storage (Local) và Queue (node-cron) cho Giai đoạn 1.
 - **2026-03-13:** Hoàn thành PRD v1.4 với đầy đủ các yêu cầu nghiệp vụ bổ sung.
