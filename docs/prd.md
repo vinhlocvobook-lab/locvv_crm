@@ -176,7 +176,10 @@ class OpenAIAdapter implements ILLMAdapter { ... }
 - **Framework:** Node.js với **Express.js** (hoặc NestJS nếu dự án cần tính cấu trúc cao hơn).
 - **Language:** TypeScript.
 - **ORM:** **Prisma** (Hỗ trợ type-safe và migration mạnh mẽ).
-- **Queue System:** **Redis + BullMQ** cho các tác vụ nền như gửi email, quét SLA và xử lý AI.
+- **Queue & Scheduler System:**
+    - **Phase 1:** Sử dụng **node-cron** cho các tác vụ quét SLA định kỳ và **async/await** trực tiếp với Nodemailer cho việc gửi email.
+    - **Phase 2:** Nâng cấp lên **Redis + BullMQ** khi cần xử lý AI email parsing (hỗ tợ retry, priority) hoặc khi tải hệ thống tăng cao.
+    - **Yêu cầu kiến trúc:** Tách biệt `EmailService` và `SchedulerService` thành các layer độc lập ngay từ đầu (Abstract Class/Interface) để dễ dàng hoán đổi implementation mà không ảnh hưởng đến logic nghiệp vụ.
 
 ### Frontend
 - **Framework:** **React** với TypeScript.

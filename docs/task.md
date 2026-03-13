@@ -7,10 +7,11 @@
     - [x] Validate business workflow with the user
 - [/] Phase 2: PRD Generation
     - [x] Draft full PRD document
-    - [x] Refine PRD based on feedback (Unable to fulfill state, DB Schema, Tech Stack)
+    - [x] Refine PRD based on feedback (Unable to fulfill, DB, Tech Stack)
+    - [x] Integrate Phase 1/2 Queue strategy & Service Abstraction
     - [ ] Define detailed SQL migrations for all tables
     - [ ] Design LLM Abstraction layer (Adapter Pattern)
-    - [ ] Establish Audit, Storage and Queue strategies
+    - [ ] Design decoupled Email & Scheduler service interfaces
 - [/] Phase 3: Project Initialization
     - [x] Create .gitignore
     - [x] Create .env.example
