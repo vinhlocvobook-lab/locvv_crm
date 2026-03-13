@@ -14,15 +14,16 @@ Chi tiết các hạng mục công việc cần triển khai.
 - [x] Tạo `README.md`.
 - [x] Thiết lập cấu trúc thư mục `docs/`.
 
-## Phase 4: Backend Implementation (Kế hoạch)
-- [ ] Khởi tạo Node.js & TypeScript.
-- [ ] Cấu trúc folder theo module-based.
-- [ ] Cấu hình Prisma & Database connection.
-- [ ] Triển khai Module Auth (Login, Register, JWT).
-- [ ] Triển khai Tenant Middleware & Data Isolation.
+## Phase 4: Backend Implementation (🏃 Đang thực hiện)
+- [x] Khởi tạo Node.js & TypeScript.
+- [x] Cấu trúc folder theo module-based.
+- [x] Cấu hình Prisma & Database connection.
+- [🏃] Triển khai Module Auth (Login, Register, JWT).
+- [x] Triển khai Tenant Middleware & Data Isolation.
 - [ ] Triển khai Scheduler & Email Service Layer.
 
-## Phase 5: Frontend Implementation (Kế hoạch)
+## Phase 5: Frontend Implementation (🏃 Đang thực hiện)
+- [x] Thiết kế UI/UX (Stitch).
 - [ ] Khởi tạo Vite + React + TypeScript.
 - [ ] Cấu hình Tailwind CSS & Shadcn UI.
 - [ ] Xây dựng Layout hệ thống (Sidebar, Header, Auth).

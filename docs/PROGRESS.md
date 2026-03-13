@@ -7,11 +7,12 @@ Theo dõi các mốc quan trọng của dự án.
 | **Phase 1: Discovery** | ✅ Hoàn thành | 100% | Đã chốt PRD v1.4 |
 | **Phase 2: Technical Design** | ✅ Hoàn thành | 100% | Đã xong Architecture, DB, API, Service Interfaces |
 | **Phase 3: Initialization** | ✅ Hoàn thành | 100% | Gitignore, Env, README |
-| **Phase 4: Backend Setup** | ⏳ Chờ | 0% | Cấu trúc module, Type-safe |
+| **Phase 4: Backend Setup** | 🏃 Đang thực hiện | 20% | Đã khởi tạo Node/TS và Prisma Schema |
 | **Phase 5: Frontend Setup** | ⏳ Chờ | 0% | UI Layout, State management |
 | **Phase 6: Core Features** | ⏳ Chờ | 0% | Auth, Quotes, Tenant |
 
 ## Cập nhật gần đây
+- **2026-03-13:** Khởi tạo Backend project, cài đặt dependencies, thiết lập cấu trúc thư mục và định nghĩa Prisma Schema.
 - **2026-03-13:** Hoàn thành **API Reference** và **Service Interfaces**, kết thúc giai đoạn Technical Design.
 - **2026-03-13:** Điều chỉnh kiến trúc VoIP: Sử dụng SIP over WebRTC kết nối tổng đài Asterisk PBX thay vì truyền tín hiệu qua Socket.io.
 - **2026-03-13:** Giới hạn phạm vi của Socket.io chỉ cho Chat nội bộ và Notification.

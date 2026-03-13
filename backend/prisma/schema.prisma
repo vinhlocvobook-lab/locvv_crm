@@ -1,0 +1,294 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id           String    @id @default(uuid())
+  slug         String    @unique
+  name         String
+  settings     Json?
+  llmProvider  String?
+  llmApiKey    String?   @db.Text
+  status       String    @default("active")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  
+  users        User[]
+  teams        Team[]
+  customers    Customer[]
+  suppliers    Supplier[]
+  products     Product[]
+  quotes       QuoteRequest[]
+  attachments  Attachment[]
+  auditLogs    AuditLog[]
+  emailLogs    EmailLog[]
+  notifications Notification[]
+
+  @@index([slug])
+  @@index([status])
+  @@map("tenants")
+}
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  permissions Json
+  users       User[]
+
+  @@map("roles")
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  tenantId  String
+  name      String
+  leaderId  String?
+  
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  leader    User?    @relation("TeamLeader", fields: [leaderId], references: [id])
+  users     User[]   @relation("TeamMembers")
+
+  @@map("teams")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  tenantId  String
+  roleId    Int
+  teamId    String?
+  email     String
+  password  String
+  name      String
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  role      Role     @relation(fields: [roleId], references: [id])
+  team      Team?    @relation("TeamMembers", fields: [teamId], references: [id])
+  ledTeams  Team[]   @relation("TeamLeader")
+  
+  quotes    QuoteRequest[] @relation("SalesQuotes")
+  supplierQuotes SupplierQuote[] @relation("PurchasingQuotes")
+  notifications  Notification[]
+  auditLogs      AuditLog[]
+
+  @@unique([tenantId, email])
+  @@map("users")
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  tenantId  String
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  taxCode   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  quotes    QuoteRequest[]
+
+  @@map("customers")
+}
+
+model Supplier {
+  id        String   @id @default(uuid())
+  tenantId  String
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  taxCode   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  quotes    SupplierQuote[]
+
+  @@map("suppliers")
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  tenantId    String
+  sku         String
+  name        String
+  unit        String?
+  basePrice   Decimal  @db.Decimal(15, 2)
+  isTemporary Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  quoteItems  QuoteRequestItem[]
+  supplierQuoteItems SupplierQuoteItem[]
+
+  @@map("products")
+}
+
+model QuoteRequest {
+  id             String   @id @default(uuid())
+  tenantId       String
+  salesId        String
+  customerId     String
+  status         String
+  currentVersion Int      @default(1)
+  expiryDate     DateTime?
+  totalAmount    Decimal  @db.Decimal(15, 2)
+  currency       String   @default("VND")
+  slaDeadline    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+  sales          User     @relation("SalesQuotes", fields: [salesId], references: [id])
+  customer       Customer @relation(fields: [customerId], references: [id])
+  items          QuoteRequestItem[]
+  versions       QuoteVersion[]
+  supplierQuotes SupplierQuote[]
+  attachments    Attachment[]
+
+  @@index([tenantId, status])
+  @@map("quote_requests")
+}
+
+model QuoteRequestItem {
+  id             String   @id @default(uuid())
+  quoteRequestId String
+  productId      String
+  quantity       Decimal  @db.Decimal(15, 2)
+  targetPrice    Decimal  @db.Decimal(15, 2)
+  finalPrice     Decimal? @db.Decimal(15, 2)
+
+  quoteRequest   QuoteRequest @relation(fields: [quoteRequestId], references: [id])
+  product        Product      @relation(fields: [productId], references: [id])
+
+  @@map("quote_request_items")
+}
+
+model QuoteVersion {
+  id             String   @id @default(uuid())
+  quoteRequestId String
+  versionNumber  Int
+  snapshotData   Json
+  createdBy      String
+  createdAt      DateTime @default(now())
+
+  quoteRequest   QuoteRequest @relation(fields: [quoteRequestId], references: [id])
+
+  @@map("quote_versions")
+}
+
+model SupplierQuote {
+  id             String   @id @default(uuid())
+  quoteRequestId String
+  supplierId     String
+  purchasingId   String
+  totalAmount    Decimal  @db.Decimal(15, 2)
+  currency       String   @default("VND")
+  status         String
+  createdAt      DateTime @default(now())
+
+  quoteRequest   QuoteRequest @relation(fields: [quoteRequestId], references: [id])
+  supplier       Supplier     @relation(fields: [supplierId], references: [id])
+  purchasing     User         @relation("PurchasingQuotes", fields: [purchasingId], references: [id])
+  items          SupplierQuoteItem[]
+
+  @@map("supplier_quotes")
+}
+
+model SupplierQuoteItem {
+  id               String   @id @default(uuid())
+  supplierQuoteId  String
+  productId        String
+  quantity         Decimal  @db.Decimal(15, 2)
+  unitPrice        Decimal  @db.Decimal(15, 2)
+
+  supplierQuote    SupplierQuote @relation(fields: [supplierQuoteId], references: [id])
+  product          Product       @relation(fields: [productId], references: [id])
+
+  @@map("supplier_quote_items")
+}
+
+model Notification {
+  id        BigInt   @id @default(autoincrement())
+  tenantId  String
+  userId    String
+  type      String
+  content   String   @db.Text
+  isRead    Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         BigInt   @id @default(autoincrement())
+  tenantId   String
+  actorId    String
+  entityType String
+  entityId   String
+  action     String
+  oldData    Json?
+  newData    Json?
+  timestamp  DateTime @default(now())
+
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  actor      User     @relation(fields: [actorId], references: [id])
+
+  @@index([tenantId, entityType, entityId])
+  @@map("audit_logs")
+}
+
+model EmailLog {
+  id           BigInt   @id @default(autoincrement())
+  tenantId     String
+  recipient    String
+  subject      String
+  status       String
+  errorMessage String?  @db.Text
+  sentAt       DateTime @default(now())
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@map("email_logs")
+}
+
+model Attachment {
+  id         String   @id @default(uuid())
+  tenantId   String
+  entityType String
+  entityId   String
+  fileName   String
+  filePath   String   @db.Text
+  fileSize   Int
+  mimeType   String
+  createdAt  DateTime @default(now())
+
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  quote      QuoteRequest? @relation(fields: [quoteId], references: [id])
+  quoteId    String?
+
+  @@map("attachments")
+}
