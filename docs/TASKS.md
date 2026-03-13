@@ -2,17 +2,11 @@
 
 Chi tiết các hạng mục công việc cần triển khai.
 
-## Phase 1: Discovery & Analysis (Hoàn thành)
-- [x] Phân tích yêu cầu kinh doanh.
-- [x] Đặt câu hỏi làm rõ quy trình phê duyệt và sản phẩm tạm thời.
-- [x] Đề xuất cải tiến về Versioning, Dashboard và Thông báo.
-- [x] Chốt tài liệu PRD v1.4.
-
-## Phase 2: Technical Design (🏃 Đang thực hiện)
+## Phase 2: Technical Design (✅ Hoàn thành)
 - [x] Thiết kế kiến trúc tổng thể (Architecture).
 - [x] Thiết kế Cơ sở dữ liệu chi tiết (Database Schema).
-- [ ] Thiết kế tài liệu API Reference (Swagger/OpenAPI).
-- [ ] Thiết kế Service Interface (Email, Storage, LLM).
+- [x] Thiết kế tài liệu API Reference.
+- [x] Thiết kế Service Interface (Email, Storage, LLM, Scheduler).
 
 ## Phase 3: Project Initialization (Hoàn thành)
 - [x] Tạo `.gitignore` chuẩn.
@@ -32,4 +26,4 @@ Chi tiết các hạng mục công việc cần triển khai.
 - [ ] Khởi tạo Vite + React + TypeScript.
 - [ ] Cấu hình Tailwind CSS & Shadcn UI.
 - [ ] Xây dựng Layout hệ thống (Sidebar, Header, Auth).
-- [ ] Kết nối API & Quản lý State với Zustand.
+- [ ] Kết nối API & Quản lý State với **Redux Toolkit**.
