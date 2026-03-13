@@ -11,7 +11,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../slices/authSlice';
+import { logoutUser } from '../slices/authSlice';
 
 const SidebarItem = ({ to, icon: Icon, label }: { to: string, icon: any, label: string }) => (
   <NavLink
@@ -70,7 +70,7 @@ const Sidebar = () => {
           </div>
         </div>
         <button
-          onClick={() => dispatch(logout())}
+          onClick={() => dispatch(logoutUser() as any)}
           className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors font-medium"
         >
           <LogOut className="w-5 h-5" />

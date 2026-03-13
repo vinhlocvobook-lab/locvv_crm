@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { setCredentials, setLoading } from '../slices/authSlice';
-import axios from 'axios';
+import api from '../utils/api';
 import { Lock, Mail, Loader2 } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
@@ -11,7 +11,13 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading } = useSelector((state: any) => state.auth);
+  const { loading, isAuthenticated } = useSelector((state: any) => state.auth);
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +25,7 @@ const LoginPage: React.FC = () => {
     dispatch(setLoading(true));
 
     try {
-      const response = await axios.post('/api/v1/auth/login', { email, password });
+      const response = await api.post('/auth/login', { email, password });
       const { user, token } = response.data.data;
       dispatch(setCredentials({ user, token }));
       navigate('/dashboard');

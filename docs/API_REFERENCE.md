@@ -32,7 +32,7 @@ Tài liệu này định nghĩa các endpoint RESTful cho hệ thống QMS.
 
 ### POST `/refresh`
 - **Mô tả:** Làm mới access token từ refresh token.
-- **Body:** `{ "refreshToken": "..." }`
+- **Auth:** Cookies Required (`refreshToken`).
 
 ### POST `/change-password`
 - **Mô tả:** Đổi mật khẩu người dùng hiện tại.

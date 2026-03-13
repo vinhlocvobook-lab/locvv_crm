@@ -3,7 +3,9 @@ import jwt from 'jsonwebtoken';
 import prisma from '../../database/client.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
-const JWT_EXPIRES_IN = '1d';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m'; // Default 15 mins for access token
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'super-refresh-secret-key';
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d'; // Default 7 days for refresh token
 
 export class AuthService {
   async register(data: any) {
@@ -58,7 +60,13 @@ export class AuthService {
         role: user.role.name,
       },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      { expiresIn: JWT_EXPIRES_IN as any }
+    );
+
+    const refreshToken = jwt.sign(
+      { uid: user.id },
+      JWT_REFRESH_SECRET,
+      { expiresIn: JWT_REFRESH_EXPIRES_IN as any }
     );
 
     return {
@@ -73,8 +81,37 @@ export class AuthService {
           slug: user.tenant.slug,
         },
       },
-      token,
+      accessToken: token,
+      refreshToken,
     };
+  }
+
+  async verifyRefreshToken(token: string) {
+    try {
+      const decoded = jwt.verify(token, JWT_REFRESH_SECRET) as any;
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.uid },
+        include: { tenant: true, role: true },
+      });
+
+      if (!user || user.status !== 'active' || user.tenant.status !== 'active') {
+        throw new Error('User inactive or not found');
+      }
+
+      const newAccessToken = jwt.sign(
+        {
+          uid: user.id,
+          tid: user.tenantId,
+          role: user.role.name,
+        },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN as any }
+      );
+
+      return { accessToken: newAccessToken };
+    } catch (error) {
+      throw { status: 401, message: 'Refresh token không hợp lệ hoặc đã hết hạn', code: 'ERR_AUTH_INVALID_REFRESH' };
+    }
   }
 
   async getMe(userId: string) {
