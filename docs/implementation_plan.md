@@ -12,11 +12,12 @@ Tạo ra một tài liệu PRD chi tiết, chuyên nghiệp bằng tiếng Việ
 4. **MoSCoW Prioritization**: Phân loại tính năng cho Phase 1 và Phase 2.
 5. **Thiết kế hệ thống**: Kiến trúc Monolith module-based, Multi-tenant (Shared DB, Tenant ID).
 6. **Chi tiết kỹ thuật**:
-    - Cơ sở dữ liệu (MariaDB schema).
-    - Quản lý phiên bản (Versioning) & Hiệu lực báo giá.
+    - Cơ sở dữ liệu: MariaDB với **Prisma ORM**.
+    - Backend: Node.js/Express với **Redis + BullMQ** cho Queue.
+    - Frontend: React với **Zustand** và **Shadcn UI**.
+    - Quản lý phiên bản (Versioning): Snapshot dựa trên JSON.
     - Chiến lược SLA (Business hours, Escalation levels).
     - Trừu tượng hóa LLM (Adapter pattern).
-    - Thông báo (Realtime & Email).
 7. **Quản lý rủi ro & Khả năng mở rộng**.
 
 ## Các khía cạnh cần xử lý đặc biệt

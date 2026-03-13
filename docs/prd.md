@@ -40,8 +40,11 @@
 - Thiết lập cấu hình Tenant (Tiền tệ mặc định, VAT, SLA policy).
 
 ### Super Admin (Platform)
-- Quản lý tất cả Tenant (Onboarding/Offboarding).
-- Giám sát sức khỏe hệ thống và lưu lượng sử dụng.
+- **Tenant Management:** Khởi tạo, kích hoạt/vô hiệu hóa công ty (Tenant). Setup cấu hình ban đầu cho Tenant mới.
+- **Platform User Management:** Quản lý tài khoản quản trị hệ thống.
+- **Monitoring:** Giám sát hiệu năng hệ thống toàn bộ nền tảng, theo dõi lượng Quote Request và vi phạm SLA trên mức độ toàn cầu.
+- **System Settings:** Quản lý Feature Flags, cập nhật các phiên bản hệ thống.
+- **Support & Audit:** Truy cập Audit Logs toàn hệ thống để hỗ trợ kỹ thuật và bảo mật.
 
 ---
 
@@ -69,14 +72,14 @@
 - Multi-tenancy isolation (Shared DB + `tenant_id`).
 - Quản lý User/Role/Permission cơ bản.
 - Luồng Quote Request từ DRAFT -> SENT_TO_CUSTOMER.
-- Quản lý phiên bản (v1, v2) cho báo giá.
+- Quản lý phiên bản (v1, v2) cho báo giá (Snapshot).
 - Dashboard cơ bản cho TL (Bottlenecks).
 - Realtime notification & Notification Center nội bộ.
+- **Email notification (SMTP/SendGrid/Resend):** Bắt buộc cho luồng SLA và gửi báo giá cho khách hàng.
 - Import/Export Sản phẩm, Khách hàng, Supplier (CSV/Excel).
 - Đa tiền tệ & VAT.
 
 ### Should Have (Nên có)
-- Email notification (SMTP integration).
 - PDF Quote Generation.
 - Lịch sử Audit Log chi tiết (Trình xem log).
 - Quản lý hiệu lực báo giá và cảnh báo hết hạn.
@@ -110,15 +113,21 @@ SLA sẽ được tính theo **Giờ làm việc (Working Hours)** của công t
 
 ## 6. Thiết kế Cơ sở dữ liệu (Gợi ý Schema)
 
-### Tables chính:
-- `tenants`: id, slug, name, settings (JSON), status.
-- `users`: id, tenant_id, name, email, role_id, team_id.
+### Tables chi tiết:
+- `tenants`: id, slug, name, settings (JSON), status, created_at, updated_at.
+- `roles`: id, name, description, permissions (JSON).
+- `teams`: id, tenant_id, name, leader_id, description.
+- `users`: id, tenant_id, name, email, role_id, team_id, status.
+- `customers`: id, tenant_id, name, email, phone, address, tax_code.
+- `suppliers`: id, tenant_id, name, contact_person, email, phone, category.
 - `products`: id, tenant_id, sku, name, unit, base_price, status (is_temporary).
-- `quote_requests`: id, tenant_id, sales_id, status, version_number, expiry_date, total_amount, currency.
-- `quote_request_items`: id, quote_id, product_id, quantity, target_price.
-- `supplier_quotes`: id, quote_id, supplier_id, purchasing_id, total_amount, currency, status.
+- `quote_requests`: id, tenant_id, sales_id, customer_id, status, current_version, expiry_date, total_amount, currency.
+- `quote_request_items`: id, quote_request_id, product_id, quantity, target_price.
+- `quote_versions`: id, quote_request_id, version_number, snapshot_data (JSON), created_by, created_at. (Lưu snapshot tại các mốc APPROVED hoặc SENT).
+- `supplier_quotes`: id, quote_request_id, supplier_id, purchasing_id, total_amount, currency, status.
 - `supplier_quote_items`: id, supplier_quote_id, product_id, quantity, unit_price.
 - `notifications`: id, tenant_id, user_id, type, content, is_read, metadata.
+- `email_logs`: id, tenant_id, recipient, subject, body_preview, status (sent/failed), error_msg, sent_at.
 - `audit_logs`: id, tenant_id, actor_id, entity_type, entity_id, action, timestamp, old_data, new_data.
 
 ---
@@ -140,7 +149,15 @@ class OpenAIAdapter implements ILLMAdapter { ... }
 
 ## 8. Quản lý Phiên bản & Hiệu lực (Versioning)
 
-- Mỗi khi có sự thay đổi lớn trong cấu trúc giá hoặc sản phẩm sau khi đã sang bước tiếp theo, hệ thống sẽ tạo một phiên bản mới (v2, v3).
+- **Trigger tạo phiên bản mới (Versioning):**
+    - Thay đổi danh sách sản phẩm (thêm/bớt) sau khi yêu cầu đã ở trạng thái `WAITING_TL_APPROVAL`.
+    - Thay đổi số lượng hoặc giá mục tiêu/giá bán sau khi đã được `APPROVED`.
+    - Sau khi báo giá đã gửi cho khách hàng (`SENT_TO_CUSTOMER`) nhưng khách hàng yêu cầu điều chỉnh lại.
+- **Không trigger phiên bản mới:**
+    - Thay đổi trong giai đoạn `DRAFT`.
+    - Cập nhật thông tin ghi chú (Comment), đính kèm file (Attachment) không ảnh hưởng đến giá trị báo giá.
+    - Sửa lỗi chính tả hoặc mô tả sản phẩm (trừ khi làm thay đổi bản chất sản phẩm).
+- **Snapshot:** Mỗi phiên bản sẽ lưu một bản snapshot JSON toàn bộ dữ liệu tại thời điểm đó để đảm bảo tính bất biến của lịch sử.
 - **Hiệu lực (Expiry):** Mỗi `quote_request` sẽ có trường `expiry_date`.
 - Một Job định kỳ (Cron job) sẽ quét các báo giá sắp hết hạn trong 24h tới để gửi email/notification "Renew Request" cho Sales/Purchasing.
 
@@ -150,3 +167,25 @@ class OpenAIAdapter implements ILLMAdapter { ... }
 - **Rủi ro:** Rò rỉ dữ liệu giữa các Tenant.
 - **Giải pháp:** Sử dụng middleware kiểm tra `tenant_id` ở cấp độ truy vấn DB global.
 - **Mở rộng:** Cấu trúc code theo module (DDD - Domain Driven Design) để dễ dàng tách thành microservices (Auth, Quote, Notification, AI) trong Phase 2.
+
+---
+
+## 10. Technology Stack (Chi tiết)
+
+### Backend
+- **Framework:** Node.js với **Express.js** (hoặc NestJS nếu dự án cần tính cấu trúc cao hơn).
+- **Language:** TypeScript.
+- **ORM:** **Prisma** (Hỗ trợ type-safe và migration mạnh mẽ).
+- **Queue System:** **Redis + BullMQ** cho các tác vụ nền như gửi email, quét SLA và xử lý AI.
+
+### Frontend
+- **Framework:** **React** với TypeScript.
+- **State Management:** **Zustand** (Nhẹ, dễ quản lý cho quy mô 20-50 users).
+- **UI Library:** **Tailwind CSS + Shadcn UI** (Premium, hiện đại, dễ tùy biến).
+- **Data Fetching:** **TanStack Query** (React Query) để quản lý cache và trạng thái server.
+
+### Infrastructure & Others
+- **Database:** MariaDB.
+- **Realtime:** Socket.io.
+- **Storage:** Local Storage (Phase 1), S3-compatible (Phase 2).
+- **Authentication:** JWT với cơ chế Refresh Token.
