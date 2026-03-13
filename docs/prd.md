@@ -78,16 +78,18 @@
 - **Email notification (SMTP/SendGrid/Resend):** Bắt buộc cho luồng SLA và gửi báo giá cho khách hàng.
 - Import/Export Sản phẩm, Khách hàng, Supplier (CSV/Excel).
 - Đa tiền tệ & VAT.
+- **Local Storage:** Lưu trữ file đính kèm và PDF tại hệ thống file cục bộ.
 
 ### Should Have (Nên có)
 - PDF Quote Generation.
 - Lịch sử Audit Log chi tiết (Trình xem log).
 - Quản lý hiệu lực báo giá và cảnh báo hết hạn.
+- **Backup Policy:** Quy trình sao lưu định kỳ cho thư mục `/uploads`.
 
 ### Could Have (Có thể có - Phase 2)
 - LLM Email Intake (Forward email để extract giá tự động).
 - Chat thread nội bộ cho mỗi Quote Request.
-- S3 Storage integration.
+- **Cloud Sync:** Đồng bộ hóa dữ liệu lên Google Drive / OneDrive.
 
 ### Won't Have (Chưa thực hiện)
 - Portal cho khách hàng tự phục vụ (Self-service portal).
@@ -190,5 +192,9 @@ class OpenAIAdapter implements ILLMAdapter { ... }
 ### Infrastructure & Others
 - **Database:** MariaDB.
 - **Realtime:** Socket.io.
-- **Storage:** Local Storage (Phase 1), S3-compatible (Phase 2).
+- **File Storage:**
+    - **Phase 1:** Sử dụng **Local Filesystem**. Cấu trúc thư mục: `/uploads/{tenant_slug}/{category}/` (ví dụ: `/uploads/company-a/suppliers/`).
+    - **Phase 2:** Tích hợp **Cloud Sync** (Google Drive / OneDrive) thay vì S3.
+    - **Yêu cầu kiến trúc:** Thiết kế `IStorageService` interface ngay từ Phase 1 để đảm bảo việc hoán đổi giữa Local, GDrive hoặc OneDrive sau này diễn ra dễ dàng.
+    - **Backup:** Phải có chính sách sao lưu định kỳ (automated backup policy) cho thư mục `/uploads` được đề cập trong tài liệu triển khai.
 - **Authentication:** JWT với cơ chế Refresh Token.

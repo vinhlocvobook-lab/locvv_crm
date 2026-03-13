@@ -13,17 +13,19 @@ Tạo ra một tài liệu PRD chi tiết, chuyên nghiệp bằng tiếng Việ
 5. **Thiết kế hệ thống**: Kiến trúc Monolith module-based, Multi-tenant (Shared DB, Tenant ID).
 6. **Chi tiết kỹ thuật**:
     - Cơ sở dữ liệu: MariaDB với **Prisma ORM**.
-    - Backend: Node.js/Express với **node-cron** (Phase 1) và sẵn sàng cho **Redis + BullMQ** (Phase 2).
+    - Backend: Node.js/Express với **node-cron** (Phase 1).
     - Frontend: React với **Zustand** và **Shadcn UI**.
     - Quản lý phiên bản (Versioning): Snapshot dựa trên JSON.
     - Chiến lược SLA: Scheduler quét định kỳ mỗi 5-15 phút.
     - Trừu tượng hóa LLM (Adapter pattern).
+    - Storage: **Local Filesystem** với `IStorageService` abstraction.
 7. **Quản lý rủi ro & Khả năng mở rộng**.
 
 ## Các khía cạnh cần xử lý đặc biệt
 - **Đa tiền tệ & VAT**: Xử lý tỷ giá hối đoái tại thời điểm báo giá.
 - **Hiệu lực báo giá**: Cơ chế tự động quét và thông báo khi sắp hết hạn.
-- **Service Layer Abstraction**: Đảm bảo `EmailService` và `SchedulerService` được định nghĩa thông qua Interface/Abstract class để có thể swap giữa `node-cron/nodemailer` và `BullMQ` một cách trong suốt.
+- **Service Layer Abstraction**: Đảm bảo `EmailService`, `SchedulerService` và `IStorageService` được định nghĩa qua Interface để swap implementation dễ dàng.
+- **Storage Organization**: Phân cấp thư mục theo `/uploads/{tenant_slug}/{category}/`.
 - **Data Isolation**: Đảm bảo Tenant ID luôn được kiểm soát chặt chẽ ở cấp độ query/middleware.
 
 ## Kế hoạch thực hiện
