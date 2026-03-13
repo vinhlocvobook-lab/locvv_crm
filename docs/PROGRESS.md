@@ -1,0 +1,17 @@
+# PROJECT PROGRESS - QMS
+
+Theo dõi các mốc quan trọng của dự án.
+
+| Giai đoạn | Trạng thái | Hoàn thành | Ghi chú |
+| :--- | :--- | :--- | :--- |
+| **Phase 1: Discovery** | ✅ Hoàn thành | 100% | Đã chốt PRD v1.4 |
+| **Phase 2: Technical Design** | 🏃 Đang thực hiện | 80% | Đã xong Architecture & DB |
+| **Phase 3: Initialization** | ✅ Hoàn thành | 100% | Gitignore, Env, README |
+| **Phase 4: Backend Setup** | ⏳ Chờ | 0% | Cấu trúc module, Type-safe |
+| **Phase 5: Frontend Setup** | ⏳ Chờ | 0% | UI Layout, State management |
+| **Phase 6: Core Features** | ⏳ Chờ | 0% | Auth, Quotes, Tenant |
+
+## Cập nhật gần đây
+- **2026-03-13:** Thiết kế xong file `ARCHITECTURE.md` và `DATABASE.md`.
+- **2026-03-13:** Chốt phương án Storage (Local) và Queue (node-cron) cho Giai đoạn 1.
+- **2026-03-13:** Hoàn thành PRD v1.4 với đầy đủ các yêu cầu nghiệp vụ bổ sung.
