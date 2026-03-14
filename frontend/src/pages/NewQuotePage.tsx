@@ -33,6 +33,7 @@ interface Product {
   leadTime?: string;
   manufacturer?: { name: string };
   category?: { name: string };
+  priceExpiry?: string;
 }
 
 interface QuoteItem {
@@ -43,6 +44,7 @@ interface QuoteItem {
   targetPrice: number;
   taxRate: number;
   leadTime: string;
+  priceExpiry?: string;
 }
 
 const NewQuotePage = () => {
@@ -114,7 +116,8 @@ const NewQuotePage = () => {
             name: product.name, 
             targetPrice: Number(product.basePrice),
             taxRate: Number(product.taxRate || 0),
-            leadTime: product.leadTime || ''
+            leadTime: product.leadTime || '',
+            priceExpiry: product.priceExpiry
           } 
         : item
     ));
@@ -152,6 +155,18 @@ const NewQuotePage = () => {
       return;
     }
 
+    // Validation: Expiry date cannot exceed min priceExpiry
+    const expiries = validItems.map(i => i.priceExpiry ? new Date(i.priceExpiry).getTime() : Infinity);
+    const minExpiryTime = Math.min(...expiries);
+    
+    if (expiryDate && minExpiryTime !== Infinity) {
+        if (new Date(expiryDate).getTime() > minExpiryTime) {
+            setError('Ngày hiệu lực chung không được vượt quá Hạn mức giá ngắn nhất của sản phẩm (' + new Date(minExpiryTime).toLocaleDateString('vi-VN') + ').');
+            setStep(1);
+            return;
+        }
+    }
+
     setLoading(true);
     setError(null);
 
@@ -161,7 +176,8 @@ const NewQuotePage = () => {
         items: validItems.map(i => ({
           productId: i.productId,
           quantity: i.quantity,
-          targetPrice: i.targetPrice
+          targetPrice: i.targetPrice,
+          priceExpiry: i.priceExpiry
         })),
         notes,
         expiryDate: expiryDate || undefined,
@@ -392,6 +408,7 @@ const NewQuotePage = () => {
                                             <span className="uppercase tracking-tighter bg-white/5 px-1.5 py-0.5 rounded">{p.sku}</span>
                                             {p.manufacturer && <span className="text-blue-400">{p.manufacturer.name}</span>}
                                             {p.category && <span>• {p.category.name}</span>}
+                                            {p.priceExpiry && <span className="text-yellow-500">Hạn giá: {new Date(p.priceExpiry).toLocaleDateString('vi-VN')}</span>}
                                           </div>
                                         </div>
                                         <div className="flex flex-col items-end">
@@ -518,6 +535,7 @@ const NewQuotePage = () => {
                                   <div className="text-xs text-gray-500 flex gap-3">
                                     <span>SL: {item.quantity}</span>
                                     {item.leadTime && <span>Giao: {item.leadTime}</span>}
+                                    {item.priceExpiry && <span className="text-yellow-600">Hạn giá: {new Date(item.priceExpiry).toLocaleDateString('vi-VN')}</span>}
                                   </div>
                                 </div>
                                 <div className="flex flex-col items-end">

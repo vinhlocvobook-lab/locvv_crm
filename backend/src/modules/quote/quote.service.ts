@@ -6,7 +6,7 @@ export class QuoteService {
     tenantId: string;
     salesId: string;
     customerId: string;
-    items: Array<{ productId: string; quantity: number; targetPrice: number }>;
+    items: Array<{ productId: string; quantity: number; targetPrice: number; priceExpiry?: Date | string }>;
     currency?: string;
     expiryDate?: Date;
     approvalDeadline?: Date;
@@ -59,6 +59,7 @@ export class QuoteService {
               productId: item.productId,
               quantity: new Decimal(item.quantity),
               targetPrice: new Decimal(item.targetPrice),
+              priceExpiry: item.priceExpiry ? new Date(item.priceExpiry) : null,
             })),
           },
         },
