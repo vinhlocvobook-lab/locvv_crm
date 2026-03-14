@@ -162,7 +162,7 @@ const NewQuotePage = () => {
     if (expiryDate && minExpiryTime !== Infinity) {
         if (new Date(expiryDate).getTime() > minExpiryTime) {
             setError('Ngày hiệu lực chung không được vượt quá Hạn mức giá ngắn nhất của sản phẩm (' + new Date(minExpiryTime).toLocaleDateString('vi-VN') + ').');
-            setStep(1);
+            setStep(3);
             return;
         }
     }
@@ -293,36 +293,6 @@ const NewQuotePage = () => {
               <div className="space-y-2">
                 <label className="text-sm text-gray-400">Hạn thanh toán (Ngày)</label>
                 <input type="number" defaultValue={30} className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-              <div className="space-y-2">
-                <label className="text-sm text-gray-400">Hiệu lực báo giá (Hết hạn)</label>
-                <input 
-                  type="date" 
-                  value={expiryDate}
-                  onChange={(e) => setExpiryDate(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20" 
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm text-gray-400">Hạn phê duyệt (Approval)</label>
-                <input 
-                  type="date" 
-                  value={approvalDeadline}
-                  onChange={(e) => setApprovalDeadline(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20" 
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm text-gray-400">Hạn giá NCC (Purchasing)</label>
-                <input 
-                  type="date" 
-                  value={purchasingDeadline}
-                  onChange={(e) => setPurchasingDeadline(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20" 
-                />
               </div>
             </div>
 
@@ -509,6 +479,39 @@ const NewQuotePage = () => {
                 <div>
                     <p className="font-bold">Mọi thứ đã sẵn sàng!</p>
                     <p className="text-sm opacity-80">Vui lòng kiểm tra lại thông tin trước khi gửi yêu cầu báo giá.</p>
+                </div>
+             </div>
+
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400">Hiệu lực báo giá (Hết hạn)</label>
+                  <input 
+                    type="date" 
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20" 
+                  />
+                  {error && error.includes('Hạn mức giá ngắn nhất') && (
+                    <p className="text-xs text-red-500 mt-1">{error}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400">Hạn phê duyệt (Approval)</label>
+                  <input 
+                    type="date" 
+                    value={approvalDeadline}
+                    onChange={(e) => setApprovalDeadline(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400">Hạn giá NCC (Purchasing)</label>
+                  <input 
+                    type="date" 
+                    value={purchasingDeadline}
+                    onChange={(e) => setPurchasingDeadline(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20" 
+                  />
                 </div>
              </div>
 
