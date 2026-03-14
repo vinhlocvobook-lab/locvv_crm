@@ -12,5 +12,6 @@ router.get('/:id', quoteController.getOne);
 router.post('/:id/submit', quoteController.submit);
 router.post('/:id/supplier-quotes', quoteController.submitSupplierQuote);
 router.post('/:id/approve', quoteController.approve);
+router.put('/:id', quoteController.update);
 
 export default router;

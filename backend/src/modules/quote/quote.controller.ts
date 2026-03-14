@@ -21,6 +21,22 @@ export class QuoteController {
     }
   }
 
+  async update(req: any, res: Response, next: NextFunction) {
+    try {
+      const { items, currency, expiryDate, approvalDeadline, purchasingDeadline } = req.body;
+      const result = await quoteService.updateQuote(req.params.id, req.user.tid, {
+        items,
+        currency,
+        expiryDate: expiryDate ? new Date(expiryDate) : undefined,
+        approvalDeadline: approvalDeadline ? new Date(approvalDeadline) : undefined,
+        purchasingDeadline: purchasingDeadline ? new Date(purchasingDeadline) : undefined,
+      });
+      res.json({ success: true, data: result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getAll(req: any, res: Response, next: NextFunction) {
     try {
       const { status, salesId, customerId, page, limit } = req.query;

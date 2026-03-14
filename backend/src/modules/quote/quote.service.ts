@@ -84,6 +84,72 @@ export class QuoteService {
     });
   }
 
+  async updateQuote(id: string, tenantId: string, data: {
+    items: Array<{ productId: string; quantity: number; targetPrice: number; priceExpiry?: Date | string }>;
+    currency?: string;
+    expiryDate?: Date;
+    approvalDeadline?: Date;
+    purchasingDeadline?: Date;
+  }) {
+    const existingQuote = await prisma.quoteRequest.findFirst({
+        where: { id, tenantId, deletedAt: null }
+    });
+
+    if (!existingQuote) {
+        throw { status: 404, message: 'Không tìm thấy báo giá' };
+    }
+
+    if (existingQuote.status !== 'DRAFT') {
+        throw { status: 400, message: 'Chỉ có thể sửa báo giá ở trạng thái Nháp' };
+    }
+
+    const { items, currency, expiryDate, approvalDeadline, purchasingDeadline } = data;
+
+    const checkDate = (d: any) => d === '' ? null : d;
+    const finalExpiryDate = checkDate(expiryDate) ? new Date(checkDate(expiryDate)) : null;
+    const finalApprovalDeadline = checkDate(approvalDeadline) ? new Date(checkDate(approvalDeadline)) : null;
+    const finalPurchasingDeadline = checkDate(purchasingDeadline) ? new Date(checkDate(purchasingDeadline)) : null;
+
+    return await prisma.$transaction(async (tx) => {
+        const totalAmount = items.reduce(
+            (acc, item) => acc + (item.quantity * item.targetPrice),
+            0
+        );
+
+        // Delete all old items
+        await tx.quoteRequestItem.deleteMany({
+            where: { quoteRequestId: id }
+        });
+
+        // Update the quote and create new items
+        const updatedQuote = await tx.quoteRequest.update({
+            where: { id },
+            data: {
+                totalAmount: new Decimal(totalAmount),
+                currency: currency || existingQuote.currency,
+                expiryDate: finalExpiryDate,
+                approvalDeadline: finalApprovalDeadline,
+                purchasingDeadline: finalPurchasingDeadline,
+                items: {
+                    create: items.map((item) => ({
+                        productId: item.productId,
+                        quantity: new Decimal(item.quantity),
+                        targetPrice: new Decimal(item.targetPrice),
+                        priceExpiry: item.priceExpiry ? new Date(item.priceExpiry) : null,
+                    }))
+                }
+            },
+            include: {
+                items: { include: { product: true } },
+                customer: true,
+                sales: { select: { id: true, name: true, email: true } },
+            }
+        });
+
+        return updatedQuote;
+    });
+  }
+
   async getQuotes(filters: {
     tenantId: string;
     status?: string;
