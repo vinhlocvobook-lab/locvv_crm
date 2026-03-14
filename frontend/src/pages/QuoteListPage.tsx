@@ -130,23 +130,22 @@ const QuoteListPage = () => {
                 <th className="px-6 py-4">Khách hàng</th>
                 <th className="px-6 py-4">Giá trị</th>
                 <th className="px-6 py-4">Hiệu lực</th>
-                <th className="px-6 py-4">Hạn Duyệt</th>
-                <th className="px-6 py-4">Hạn Giá</th>
+                <th className="px-6 py-4">Hạn Duyệt / Giá NCC</th>
                 <th className="px-6 py-4">Trạng thái</th>
                 <th className="px-6 py-4">Ngày tạo</th>
-                <th className="px-6 py-4"></th>
+                <th className="px-6 py-4 text-center">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500 font-medium">
+                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500 font-medium">
                     Đang tải dữ liệu...
                   </td>
                 </tr>
               ) : quotes.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500 font-medium">
+                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500 font-medium">
                     Chưa có báo giá nào được tạo.
                   </td>
                 </tr>
@@ -172,15 +171,18 @@ const QuoteListPage = () => {
                       {quote.expiryDate ? new Date(quote.expiryDate).toLocaleDateString('vi-VN') : '-'}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-400">
-                      {quote.approvalDeadline ? new Date(quote.approvalDeadline).toLocaleDateString('vi-VN') : '-'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-400">
-                      {quote.purchasingDeadline ? new Date(quote.purchasingDeadline).toLocaleDateString('vi-VN') : '-'}
+                      <div className="flex flex-col gap-1">
+                        <span>Duyệt: {quote.approvalDeadline ? new Date(quote.approvalDeadline).toLocaleDateString('vi-VN') : '-'}</span>
+                        <span>Giá: {quote.purchasingDeadline ? new Date(quote.purchasingDeadline).toLocaleDateString('vi-VN') : '-'}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       {getStatusBadge(quote.status)}
                     </td>
-                    <td className="py-4 flex justify-end gap-2"> {/* New TD for actions */}
+                    <td className="px-6 py-4 text-gray-400 text-sm">
+                      {new Date(quote.createdAt).toLocaleDateString('vi-VN')}
+                    </td>
+                    <td className="py-4 flex justify-center gap-2">
                         {quote.status === 'DRAFT' && (
                             <button 
                                 onClick={async () => {
@@ -214,14 +216,6 @@ const QuoteListPage = () => {
                                 Xem & Duyệt
                             </button>
                         )}
-                    </td>
-                    <td className="px-6 py-4 text-gray-400 text-sm">
-                      {new Date(quote.createdAt).toLocaleDateString('vi-VN')}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button className="text-gray-500 hover:text-white p-1">
-                        <MoreVertical className="w-5 h-5" />
-                      </button>
                     </td>
                   </tr>
                 ))

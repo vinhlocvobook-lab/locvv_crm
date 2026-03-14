@@ -29,6 +29,10 @@ interface Product {
   basePrice: number;
   unit: string;
   sku: string;
+  taxRate?: number;
+  leadTime?: string;
+  manufacturer?: { name: string };
+  category?: { name: string };
 }
 
 interface QuoteItem {
@@ -37,6 +41,8 @@ interface QuoteItem {
   name: string;
   quantity: number;
   targetPrice: number;
+  taxRate: number;
+  leadTime: string;
 }
 
 const NewQuotePage = () => {
@@ -55,7 +61,7 @@ const NewQuotePage = () => {
   // Form State
   const [selectedCustomerId, setSelectedCustomerId] = useState(initialCustomerId);
   const [items, setItems] = useState<QuoteItem[]>([
-    { tempId: Date.now(), productId: '', name: '', quantity: 1, targetPrice: 0 }
+    { tempId: Date.now(), productId: '', name: '', quantity: 1, targetPrice: 0, taxRate: 0, leadTime: '' }
   ]);
   // Search & Filter State
   const [customerSearch, setCustomerSearch] = useState('');
@@ -90,7 +96,7 @@ const NewQuotePage = () => {
   }, []);
 
   const addItem = () => {
-    setItems([...items, { tempId: Date.now(), productId: '', name: '', quantity: 1, targetPrice: 0 }]);
+    setItems([...items, { tempId: Date.now(), productId: '', name: '', quantity: 1, targetPrice: 0, taxRate: 0, leadTime: '' }]);
   };
 
   const removeItem = (tempId: number) => {
@@ -102,7 +108,14 @@ const NewQuotePage = () => {
   const handleProductChange = (tempId: number, product: Product) => {
     setItems(items.map(item => 
       item.tempId === tempId 
-        ? { ...item, productId: product.id, name: product.name, targetPrice: Number(product.basePrice) } 
+        ? { 
+            ...item, 
+            productId: product.id, 
+            name: product.name, 
+            targetPrice: Number(product.basePrice),
+            taxRate: Number(product.taxRate || 0),
+            leadTime: product.leadTime || ''
+          } 
         : item
     ));
     setProductSearch({ ...productSearch, [tempId]: '' });
@@ -115,6 +128,14 @@ const NewQuotePage = () => {
 
   const calculateTotal = () => {
     return items.reduce((acc, item) => acc + (item.quantity * item.targetPrice), 0);
+  };
+
+  const calculateTotalWithTax = () => {
+    return items.reduce((acc, item) => {
+      const lineTotal = item.quantity * item.targetPrice;
+      const taxAmount = lineTotal * (item.taxRate / 100);
+      return acc + lineTotal + taxAmount;
+    }, 0);
   };
 
   const handleSubmit = async () => {
@@ -321,8 +342,10 @@ const NewQuotePage = () => {
                   <tr className="text-gray-500 text-xs font-semibold uppercase tracking-wider border-b border-white/5">
                     <th className="pb-4 pt-2">Sản phẩm</th>
                     <th className="pb-4 pt-2 w-24">Số lượng</th>
-                    <th className="pb-4 pt-2 w-48">Giá mục tiêu (đ)</th>
-                    <th className="pb-4 pt-2 text-right w-40">Thành tiền</th>
+                    <th className="pb-4 pt-2 w-32">Giá mục tiêu (đ)</th>
+                    <th className="pb-4 pt-2 w-20 text-center">Thuế</th>
+                    <th className="pb-4 pt-2 w-32">Giao hàng</th>
+                    <th className="pb-4 pt-2 text-right w-40">Thành tiền (Thuế)</th>
                     <th className="pb-4 pt-2 w-12"></th>
                   </tr>
                 </thead>
@@ -358,17 +381,24 @@ const NewQuotePage = () => {
                                 {availableProducts
                                   .filter(p => p.name.toLowerCase().includes((productSearch[item.tempId] || '').toLowerCase()) || p.sku.toLowerCase().includes((productSearch[item.tempId] || '').toLowerCase()))
                                   .map(p => (
-                                    <div 
-                                      key={p.id}
-                                      onClick={() => handleProductChange(item.tempId, p)}
-                                      className="px-3 py-2 hover:bg-blue-600/20 text-xs text-gray-300 hover:text-white cursor-pointer transition-colors flex justify-between items-center"
-                                    >
-                                      <div className="flex flex-col">
-                                        <span className="font-medium">{p.name}</span>
-                                        <span className="text-[10px] text-gray-500 uppercase tracking-tighter">{p.sku}</span>
+                                      <div 
+                                        key={p.id}
+                                        onClick={() => handleProductChange(item.tempId, p)}
+                                        className="px-3 py-2 hover:bg-blue-600/20 text-xs text-gray-300 hover:text-white cursor-pointer transition-colors flex justify-between items-center border-b border-white/[0.02]"
+                                      >
+                                        <div className="flex flex-col">
+                                          <span className="font-medium text-sm">{p.name}</span>
+                                          <div className="flex gap-2 items-center text-[10px] text-gray-500 mt-0.5">
+                                            <span className="uppercase tracking-tighter bg-white/5 px-1.5 py-0.5 rounded">{p.sku}</span>
+                                            {p.manufacturer && <span className="text-blue-400">{p.manufacturer.name}</span>}
+                                            {p.category && <span>• {p.category.name}</span>}
+                                          </div>
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-blue-400 font-bold text-sm">{Number(p.basePrice).toLocaleString()}đ</span>
+                                            {p.leadTime && <span className="text-[10px] text-gray-500">Giao: {p.leadTime}</span>}
+                                        </div>
                                       </div>
-                                      <span className="text-blue-400 font-bold">{Number(p.basePrice).toLocaleString()}đ</span>
-                                    </div>
                                   ))
                                 }
                                 <div 
@@ -403,8 +433,25 @@ const NewQuotePage = () => {
                           onChange={(e) => updateItem(item.tempId, 'targetPrice', parseInt(e.target.value) || 0)}
                         />
                       </td>
+                      <td className="py-4">
+                        <div className="flex items-center justify-center bg-white/5 border border-white/10 rounded-lg py-1.5 w-16">
+                            <span className="text-white text-sm">{item.taxRate}%</span>
+                        </div>
+                      </td>
+                      <td className="py-4">
+                         <div className="bg-white/5 border border-white/10 rounded-lg py-1.5 px-3 w-full">
+                            <span className="text-gray-300 text-sm truncate block">{item.leadTime || '-'}</span>
+                         </div>
+                      </td>
                       <td className="py-4 text-right text-gray-300 font-medium">
-                        {(item.quantity * item.targetPrice).toLocaleString()}đ
+                        <div className="flex flex-col items-end">
+                            <span>{(item.quantity * item.targetPrice).toLocaleString()}đ</span>
+                            {item.taxRate > 0 && (
+                                <span className="text-[10px] text-blue-400 mt-0.5">
+                                    +{(item.quantity * item.targetPrice * (item.taxRate / 100)).toLocaleString()}đ (VAT)
+                                </span>
+                            )}
+                        </div>
                       </td>
                       <td className="py-4 text-right">
                         <button 
@@ -422,9 +469,17 @@ const NewQuotePage = () => {
             </div>
 
             <div className="pt-8 border-t border-white/5 flex flex-col items-end gap-2">
-                <div className="flex items-center gap-8 text-gray-400">
-                    <span className="text-sm font-medium">Tạm tính:</span>
-                    <span className="text-2xl font-bold text-white">{calculateTotal().toLocaleString()}đ</span>
+                <div className="flex items-center justify-between w-64 text-gray-400 text-sm">
+                    <span>Cộng tiền hàng:</span>
+                    <span className="font-medium text-white">{calculateTotal().toLocaleString()}đ</span>
+                </div>
+                <div className="flex items-center justify-between w-64 text-blue-400 text-sm">
+                    <span>Tiền thuế VAT:</span>
+                    <span className="font-medium">{(calculateTotalWithTax() - calculateTotal()).toLocaleString()}đ</span>
+                </div>
+                <div className="flex items-center justify-between w-64 text-gray-400 mt-2 border-t border-white/10 pt-2">
+                    <span className="text-sm font-bold">Tổng thanh toán:</span>
+                    <span className="text-2xl font-bold text-white">{calculateTotalWithTax().toLocaleString()}đ</span>
                 </div>
             </div>
           </div>
@@ -448,8 +503,8 @@ const NewQuotePage = () => {
                     </p>
                 </div>
                 <div className="space-y-4 md:text-right">
-                    <h4 className="text-sm font-bold text-white uppercase tracking-wider opacity-60">Tổng giá trị dự kiến</h4>
-                    <p className="text-3xl font-bold text-white">{calculateTotal().toLocaleString()}đ</p>
+                    <h4 className="text-sm font-bold text-white uppercase tracking-wider opacity-60">Tổng giá trị dự kiến (Đã VAT)</h4>
+                    <p className="text-3xl font-bold text-white">{calculateTotalWithTax().toLocaleString()}đ</p>
                 </div>
              </div>
 
@@ -457,13 +512,19 @@ const NewQuotePage = () => {
                  <p className="text-sm text-gray-500 mb-4 font-medium uppercase tracking-widest">Tóm tắt sản phẩm ({items.filter(i => i.productId).length})</p>
                  <div className="space-y-3">
                     {items.filter(i => i.productId).map(item => (
-                        <div key={item.tempId} className="flex justify-between items-center text-sm py-2 border-b border-white/[0.03] last:border-0">
-                            <div className="flex flex-col">
-                              <span className="text-gray-300 font-medium">{item.name}</span>
-                              <span className="text-xs text-gray-500">Số lượng: {item.quantity}</span>
+                            <div key={item.tempId} className="flex justify-between items-center text-sm py-2 border-b border-white/[0.03] last:border-0">
+                                <div className="flex flex-col">
+                                  <span className="text-gray-300 font-medium">{item.name}</span>
+                                  <div className="text-xs text-gray-500 flex gap-3">
+                                    <span>SL: {item.quantity}</span>
+                                    {item.leadTime && <span>Giao: {item.leadTime}</span>}
+                                  </div>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                    <span className="text-white font-bold">{(item.quantity * item.targetPrice).toLocaleString()}đ</span>
+                                    {item.taxRate > 0 && <span className="text-[10px] text-blue-400">VAT: {item.taxRate}%</span>}
+                                </div>
                             </div>
-                            <span className="text-white font-bold">{(item.quantity * item.targetPrice).toLocaleString()}đ</span>
-                        </div>
                     ))}
                  </div>
              </div>
