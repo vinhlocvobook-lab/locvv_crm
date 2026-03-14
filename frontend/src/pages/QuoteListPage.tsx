@@ -17,7 +17,8 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  MoreVertical
+  MoreVertical,
+  Edit
 } from 'lucide-react';
 import SupplierPriceModal from '../components/SupplierPriceModal';
 
@@ -182,18 +183,27 @@ const QuoteListPage = () => {
                     <td className="px-6 py-4 text-gray-400 text-sm">
                       {new Date(quote.createdAt).toLocaleDateString('vi-VN')}
                     </td>
-                    <td className="py-4 flex justify-center gap-2">
+                    <td className="py-4 flex items-center justify-center gap-2">
                         {quote.status === 'DRAFT' && (
-                            <button 
-                                onClick={async () => {
-                                    await api.post(`/quotes/${quote.id}/submit`);
-                                    fetchQuotes();
-                                }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg transition-all"
-                            >
-                                <Send className="w-3.5 h-3.5" />
-                                Gửi Purchasing
-                            </button>
+                            <>
+                              <button 
+                                  onClick={() => navigate(`/quotes/${quote.id}/edit`)}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-all"
+                              >
+                                  <Edit className="w-3.5 h-3.5" />
+                                  Sửa
+                              </button>
+                              <button 
+                                  onClick={async () => {
+                                      await api.post(`/quotes/${quote.id}/submit`);
+                                      fetchQuotes();
+                                  }}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg transition-all"
+                              >
+                                  <Send className="w-3.5 h-3.5" />
+                                  Gửi Purchasing
+                              </button>
+                            </>
                         )}
                         {quote.status === 'REQUESTING_SUPPLIER_PRICE' && (
                             <button 

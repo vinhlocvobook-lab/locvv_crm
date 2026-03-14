@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import NewQuotePage from './pages/NewQuotePage';
+import EditQuotePage from './pages/EditQuotePage';
 import ProductListPage from './pages/ProductListPage';
 import CustomerListPage from './pages/CustomerListPage';
 import SupplierListPage from './pages/SupplierListPage';
@@ -46,6 +47,7 @@ function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/quotes" element={<QuoteListPage />} />
         <Route path="/quotes/:id/approve" element={<QuoteApprovalPage />} />
+        <Route path="/quotes/:id/edit" element={<EditQuotePage />} />
         <Route path="/quotes/new" element={<NewQuotePage />} />
         <Route path="/users" element={<UserListPage />} />
         <Route path="/roles" element={<RoleListPage />} />
