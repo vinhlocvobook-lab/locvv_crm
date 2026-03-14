@@ -4,11 +4,16 @@ import {
   LayoutDashboard, 
   FileText, 
   Package, 
+  Truck, // Added Truck here
   Users, 
   Bell, 
   Settings, 
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Shield,
+  UserCheck,
+  FolderTree,
+  Building2
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../slices/authSlice';
@@ -54,7 +59,16 @@ const Sidebar = () => {
         <SidebarItem to="/dashboard" icon={LayoutDashboard} label="Bảng điều khiển" />
         <SidebarItem to="/quotes" icon={FileText} label="Báo giá" />
         <SidebarItem to="/products" icon={Package} label="Sản phẩm" />
+        <div className="pl-4 space-y-1">
+          <SidebarItem to="/categories" icon={FolderTree} label="Phân loại" />
+          <SidebarItem to="/manufacturers" icon={Building2} label="Nhà sản xuất" />
+        </div>
         <SidebarItem to="/customers" icon={Users} label="Khách hàng" />
+        <SidebarItem to="/suppliers" icon={Truck} label="Nhà cung cấp" /> {/* Added Suppliers link */}
+        <div className="my-4 border-t border-white/5 opacity-50"></div>
+        <div className="px-6 py-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Quản trị</div>
+        <SidebarItem to="/users" icon={UserCheck} label="Thành viên" />
+        <SidebarItem to="/roles" icon={Shield} label="Phân quyền" />
         <SidebarItem to="/notifications" icon={Bell} label="Thông báo" />
         <SidebarItem to="/settings" icon={Settings} label="Cài đặt" />
       </nav>

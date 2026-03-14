@@ -122,8 +122,10 @@ SLA sẽ được tính theo **Giờ làm việc (Working Hours)** của công t
 - `users`: id, tenant_id, name, email, role_id, team_id, status.
 - `customers`: id, tenant_id, name, email, phone, address, tax_code.
 - `suppliers`: id, tenant_id, name, contact_person, email, phone, category.
-- `products`: id, tenant_id, sku, name, unit, base_price, status (is_temporary).
-- `quote_requests`: id, tenant_id, sales_id, customer_id, status, current_version, expiry_date, total_amount, currency.
+- `categories`: id, tenant_id, name, description.
+- `manufacturers`: id, tenant_id, name, description, logoUrl.
+- `products`: id, tenant_id, sku, name, unit, base_price, category_id, manufacturer_id, supplier_id, price_expiry, lead_time, tax_rate, public_price, exchange_rate, price_usd, status (is_temporary).
+- `quote_requests`: id, tenant_id, sales_id, customer_id, status, current_version, expiry_date, approval_deadline, purchasing_deadline, total_amount, currency.
 - `quote_request_items`: id, quote_request_id, product_id, quantity, target_price.
 - `quote_versions`: id, quote_request_id, version_number, snapshot_data (JSON), created_by, created_at. (Lưu snapshot tại các mốc APPROVED hoặc SENT).
 - `supplier_quotes`: id, quote_request_id, supplier_id, purchasing_id, total_amount, currency, status.

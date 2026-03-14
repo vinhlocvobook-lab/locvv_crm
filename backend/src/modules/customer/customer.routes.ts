@@ -12,5 +12,7 @@ router.use(tenantMiddleware);
 router.get('/', controller.getCustomers);
 router.get('/:id', controller.getCustomer);
 router.post('/', controller.createCustomer);
+router.put('/:id', controller.updateCustomer);
+router.delete('/:id', controller.deleteCustomer);
 
 export default router;

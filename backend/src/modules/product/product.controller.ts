@@ -37,4 +37,26 @@ export class ProductController {
       next(error);
     }
   }
+
+  async updateProduct(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = req.params.id as string;
+      const tenantId = (req as any).user.tid;
+      await productService.update(id, tenantId, req.body);
+      res.json({ success: true, message: 'Cập nhật sản phẩm thành công' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async deleteProduct(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = req.params.id as string;
+      const tenantId = (req as any).user.tid;
+      await productService.delete(id, tenantId);
+      res.json({ success: true, message: 'Xóa sản phẩm thành công' });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

@@ -4,6 +4,13 @@ import DashboardPage from './pages/DashboardPage';
 import NewQuotePage from './pages/NewQuotePage';
 import ProductListPage from './pages/ProductListPage';
 import CustomerListPage from './pages/CustomerListPage';
+import SupplierListPage from './pages/SupplierListPage';
+import QuoteListPage from './pages/QuoteListPage';
+import QuoteApprovalPage from './pages/QuoteApprovalPage';
+import UserListPage from './pages/UserListPage';
+import RoleListPage from './pages/RoleListPage';
+import CategoryListPage from './pages/CategoryListPage';
+import ManufacturerListPage from './pages/ManufacturerListPage';
 import MainLayout from './components/MainLayout';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
@@ -37,9 +44,16 @@ function App() {
       {/* Protected Routes */}
       <Route element={<MainLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/quotes" element={<QuoteListPage />} />
+        <Route path="/quotes/:id/approve" element={<QuoteApprovalPage />} />
         <Route path="/quotes/new" element={<NewQuotePage />} />
+        <Route path="/users" element={<UserListPage />} />
+        <Route path="/roles" element={<RoleListPage />} />
         <Route path="/products" element={<ProductListPage />} />
+        <Route path="/categories" element={<CategoryListPage />} />
+        <Route path="/manufacturers" element={<ManufacturerListPage />} />
         <Route path="/customers" element={<CustomerListPage />} />
+        <Route path="/suppliers" element={<SupplierListPage />} />
         {/* Fallback internal route */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Route>

@@ -32,4 +32,12 @@ Chi tiết các hạng mục công việc cần triển khai.
 - [x] Hiện thực hóa Trang Dashboard (KPIs, Charts).
 - [x] Hiện thực hóa Trang Danh sách Sản phẩm (Product List).
 - [x] Hiện thực hóa Trang Danh sách Khách hàng (Customer List).
-- [ ] Xây dựng Form Tạo báo giá (New Quote).
+- [x] Hiện thực hóa Trang Danh sách Nhà cung cấp (Supplier List).
+- [x] Xây dựng Form Tạo báo giá (New Quote).
+
+## Phase 6-13: Advanced Features & Polish (✅ Hoàn thành)
+- [x] Triển khai Module Supplier.
+- [x] Quản lý trạng thái Quote & Deadline.
+- [x] Thêm Module Category & Manufacturer.
+- [x] Tối ưu hóa UI/UX tạo/sửa Product.
+- [x] Tích hợp tính năng Đa tiền tệ & Hậu cần (Logistics) cho Product.

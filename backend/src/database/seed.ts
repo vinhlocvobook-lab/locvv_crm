@@ -14,10 +14,11 @@ async function main() {
   ];
 
   for (const role of roles) {
+    const permissionsStr = JSON.stringify(role.permissions);
     await prisma.role.upsert({
       where: { name: role.name },
-      update: { permissions: role.permissions },
-      create: { name: role.name, permissions: role.permissions },
+      update: { permissions: permissionsStr },
+      create: { name: role.name, permissions: permissionsStr },
     });
   }
   console.log('✅ Đã tạo các vai trò (Roles)');
@@ -30,7 +31,7 @@ async function main() {
       name: 'Công ty ABC Demo',
       slug: 'demo-company',
       status: 'active',
-      settings: { currency: 'VND', vat: 10 },
+      settings: JSON.stringify({ currency: 'VND', vat: 10 }),
     },
   });
   console.log('✅ Đã tạo Tenant mẫu');
