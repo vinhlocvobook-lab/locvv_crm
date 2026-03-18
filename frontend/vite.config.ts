@@ -20,6 +20,7 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:4000',
         changeOrigin: true,
+        cookieDomainRewrite: 'localhost', // Sửa lỗi Cookie chia sẻ cổng trên Chrome
       },
     },
   },

@@ -13,16 +13,31 @@ export const verifySession = createAsyncThunk(
   'auth/verifySession',
   async (_, { rejectWithValue }) => {
     try {
-      // Step 1: Try to refresh the token using the HTTPOnly cookie
+      // Strategy 1: Try to refresh via HTTPOnly cookie
       const refreshResponse = await api.post('/auth/refresh');
       const newToken = refreshResponse.data.data.accessToken;
       
       setApiToken(newToken);
+      localStorage.setItem('accessToken', newToken);
 
-      // Step 2: Use the new access token to fetch user profile
+      // Use the new access token to fetch user profile
       const response = await api.get('/auth/me');
       return { user: response.data.data, token: newToken };
     } catch (err: any) {
+      // Strategy 2: Fallback - try stored accessToken (Chrome cookie issue workaround)
+      const storedToken = localStorage.getItem('accessToken');
+      if (storedToken) {
+        try {
+          setApiToken(storedToken);
+          const response = await api.get('/auth/me');
+          return { user: response.data.data, token: storedToken };
+        } catch (meErr: any) {
+          // Token expired and cookie refresh also failed
+          localStorage.removeItem('accessToken');
+          setApiToken(null);
+        }
+      }
+
       setApiToken(null);
       return rejectWithValue(err.response?.data?.error?.message || 'Phiên làm việc đã hết hạn');
     }
@@ -39,6 +54,7 @@ export const logoutUser = createAsyncThunk(
     } finally {
       dispatch(logout());
       setApiToken(null);
+      localStorage.removeItem('accessToken');
       window.location.href = '/login';
     }
   }
@@ -64,13 +80,15 @@ const authSlice = createSlice({
       state.token = action.payload.token;
       state.isAuthenticated = true;
       state.isInitialized = true;
-      setApiToken(action.payload.token); // Store in memory API client
+      setApiToken(action.payload.token);
+      localStorage.setItem('accessToken', action.payload.token);
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
       setApiToken(null);
+      localStorage.removeItem('accessToken');
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
@@ -102,4 +120,3 @@ const authSlice = createSlice({
 
 export const { setCredentials, logout, setLoading } = authSlice.actions;
 export default authSlice.reducer;
-

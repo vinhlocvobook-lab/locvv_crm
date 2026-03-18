@@ -26,8 +26,8 @@ const LoginPage: React.FC = () => {
 
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { user, token } = response.data.data;
-      dispatch(setCredentials({ user, token }));
+      const { user, accessToken } = response.data.data;
+      dispatch(setCredentials({ user, token: accessToken }));
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.error?.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
