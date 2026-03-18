@@ -4,7 +4,7 @@ import { quoteService } from './quote.service.js';
 export class QuoteController {
   async create(req: any, res: Response, next: NextFunction) {
     try {
-      const { customerId, items, currency, expiryDate, approvalDeadline, purchasingDeadline } = req.body;
+      const { customerId, items, currency, expiryDate, approvalDeadline, purchasingDeadline, subTotal, taxAmount } = req.body;
       const result = await quoteService.createQuote({
         tenantId: req.user.tid,
         salesId: req.user.uid,
@@ -14,6 +14,8 @@ export class QuoteController {
         expiryDate: expiryDate ? new Date(expiryDate) : undefined,
         approvalDeadline: approvalDeadline ? new Date(approvalDeadline) : undefined,
         purchasingDeadline: purchasingDeadline ? new Date(purchasingDeadline) : undefined,
+        subTotal,
+        taxAmount
       });
       res.status(201).json({ success: true, data: result });
     } catch (error) {
@@ -23,13 +25,15 @@ export class QuoteController {
 
   async update(req: any, res: Response, next: NextFunction) {
     try {
-      const { items, currency, expiryDate, approvalDeadline, purchasingDeadline } = req.body;
+      const { items, currency, expiryDate, approvalDeadline, purchasingDeadline, subTotal, taxAmount } = req.body;
       const result = await quoteService.updateQuote(req.params.id, req.user.tid, {
         items,
         currency,
         expiryDate: expiryDate ? new Date(expiryDate) : undefined,
         approvalDeadline: approvalDeadline ? new Date(approvalDeadline) : undefined,
         purchasingDeadline: purchasingDeadline ? new Date(purchasingDeadline) : undefined,
+        subTotal,
+        taxAmount
       });
       res.json({ success: true, data: result });
     } catch (error) {
@@ -45,6 +49,8 @@ export class QuoteController {
         status: status as string,
         salesId: salesId as string,
         customerId: customerId as string,
+        role: req.user.role, 
+        userId: req.user.uid,
         page: page ? parseInt(page as string) : 1,
         limit: limit ? parseInt(limit as string) : 10,
       });
@@ -56,7 +62,7 @@ export class QuoteController {
 
   async getOne(req: any, res: Response, next: NextFunction) {
     try {
-      const result = await quoteService.getQuoteById(req.params.id, req.user.tid);
+      const result = await quoteService.getQuoteById(req.params.id, req.user.tid, req.user.role, req.user.uid);
       res.json({ success: true, data: result });
     } catch (error) {
       next(error);

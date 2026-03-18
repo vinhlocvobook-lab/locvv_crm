@@ -11,6 +11,8 @@ async function main() {
     { name: 'SALES', permissions: ['quote:create', 'quote:view'] },
     { name: 'PURCHASING', permissions: ['quote:price_collect', 'quote:view'] },
     { name: 'TL', permissions: ['quote:approve', 'quote:view', 'dashboard:view'] },
+    { name: 'TECHNICAL', permissions: ['quote:view_technical', 'project:view'] },
+    { name: 'ACCOUNTANT', permissions: ['quote:view_finance', 'project:view'] },
   ];
 
   for (const role of roles) {

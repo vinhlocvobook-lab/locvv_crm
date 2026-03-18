@@ -11,6 +11,8 @@ export class QuoteService {
     expiryDate?: Date;
     approvalDeadline?: Date;
     purchasingDeadline?: Date;
+    subTotal?: number;
+    taxAmount?: number;
   }) {
     const { 
       tenantId, 
@@ -20,7 +22,9 @@ export class QuoteService {
       currency = 'VND', 
       expiryDate, 
       approvalDeadline, 
-      purchasingDeadline 
+      purchasingDeadline,
+      subTotal,
+      taxAmount
     } = data;
     
     // Ensure empty strings are handled as null
@@ -42,6 +46,10 @@ export class QuoteService {
         0
       );
 
+      const calculatedTotal = subTotal !== undefined && taxAmount !== undefined ? (subTotal + taxAmount) : totalAmount;
+      const finalSubTotal = subTotal !== undefined ? subTotal : totalAmount;
+      const finalTaxAmount = taxAmount !== undefined ? taxAmount : 0;
+
       // Create the Quote Request
       const quote = await tx.quoteRequest.create({
         data: {
@@ -49,7 +57,9 @@ export class QuoteService {
           salesId,
           customerId,
           status: 'DRAFT',
-          totalAmount: new Decimal(totalAmount),
+          totalAmount: new Decimal(calculatedTotal),
+          subTotal: new Decimal(finalSubTotal),
+          taxAmount: new Decimal(finalTaxAmount),
           currency,
           expiryDate: finalExpiryDate,
           approvalDeadline: finalApprovalDeadline,
@@ -90,6 +100,8 @@ export class QuoteService {
     expiryDate?: Date;
     approvalDeadline?: Date;
     purchasingDeadline?: Date;
+    subTotal?: number;
+    taxAmount?: number;
   }) {
     const existingQuote = await prisma.quoteRequest.findFirst({
         where: { id, tenantId, deletedAt: null }
@@ -103,7 +115,7 @@ export class QuoteService {
         throw { status: 400, message: 'Chỉ có thể sửa báo giá ở trạng thái Nháp' };
     }
 
-    const { items, currency, expiryDate, approvalDeadline, purchasingDeadline } = data;
+    const { items, currency, expiryDate, approvalDeadline, purchasingDeadline, subTotal, taxAmount } = data;
 
     const checkDate = (d: any) => d === '' ? null : d;
     const finalExpiryDate = checkDate(expiryDate) ? new Date(checkDate(expiryDate)) : null;
@@ -121,11 +133,17 @@ export class QuoteService {
             where: { quoteRequestId: id }
         });
 
+        const calculatedTotal = subTotal !== undefined && taxAmount !== undefined ? (subTotal + taxAmount) : totalAmount;
+        const finalSubTotal = subTotal !== undefined ? subTotal : totalAmount;
+        const finalTaxAmount = taxAmount !== undefined ? taxAmount : 0;
+
         // Update the quote and create new items
         const updatedQuote = await tx.quoteRequest.update({
             where: { id },
             data: {
-                totalAmount: new Decimal(totalAmount),
+                totalAmount: new Decimal(calculatedTotal),
+                subTotal: new Decimal(finalSubTotal),
+                taxAmount: new Decimal(finalTaxAmount),
                 currency: currency || existingQuote.currency,
                 expiryDate: finalExpiryDate,
                 approvalDeadline: finalApprovalDeadline,
@@ -140,7 +158,7 @@ export class QuoteService {
                 }
             },
             include: {
-                items: { include: { product: true } },
+                items: { include: { product: { include: { prices: { take: 1, orderBy: { createdAt: 'desc' } } } } } },
                 customer: true,
                 sales: { select: { id: true, name: true, email: true } },
             }
@@ -155,13 +173,25 @@ export class QuoteService {
     status?: string;
     salesId?: string;
     customerId?: string;
+    role?: string;
+    userId?: string;
     page?: number;
     limit?: number;
   }) {
-    const { tenantId, status, salesId, customerId, page = 1, limit = 10 } = filters;
+    const { tenantId, status, salesId, customerId, role, userId, page = 1, limit = 10 } = filters;
     const skip = (page - 1) * limit;
 
     const where: any = { tenantId, deletedAt: null };
+    
+    // Phân quyền nâng cao (Row-Level Security)
+    if (role === 'SALES' && userId) {
+      where.salesId = userId;
+    } else if (role === 'PURCHASING') {
+      where.status = { not: 'DRAFT' }; // Chỉ thấy khi đã submit
+    } else if ((role === 'TECHNICAL' || role === 'ACCOUNTANT') && userId) {
+      where.project = { members: { some: { userId } } };
+    }
+
     if (status) where.status = status;
     if (salesId) where.salesId = salesId;
     if (customerId) where.customerId = customerId;
@@ -174,7 +204,7 @@ export class QuoteService {
           customer: true,
           items: {
             include: {
-              product: true,
+              product: { include: { prices: { take: 1, orderBy: { createdAt: 'desc' } } } },
             },
           },
           sales: {
@@ -183,6 +213,11 @@ export class QuoteService {
               name: true,
             },
           },
+          project: {
+            include: {
+              members: true
+            }
+          }
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -191,7 +226,7 @@ export class QuoteService {
     ]);
 
     return {
-      items,
+      items: items.map(item => this.maskQuoteRequest(item, role, userId)),
       meta: {
         total,
         page,
@@ -201,9 +236,20 @@ export class QuoteService {
     };
   }
 
-  async getQuoteById(id: string, tenantId: string) {
+  async getQuoteById(id: string, tenantId: string, role?: string, userId?: string) {
+    const where: any = { id, tenantId, deletedAt: null };
+
+    // Phân quyền nâng cao (Row-Level Security)
+    if (role === 'SALES' && userId) {
+      where.salesId = userId;
+    } else if (role === 'PURCHASING') {
+      where.status = { not: 'DRAFT' };
+    } else if ((role === 'TECHNICAL' || role === 'ACCOUNTANT') && userId) {
+      where.project = { members: { some: { userId } } };
+    }
+
     const quote = await prisma.quoteRequest.findFirst({
-      where: { id, tenantId, deletedAt: null },
+      where,
       include: {
         customer: true,
         sales: {
@@ -215,11 +261,11 @@ export class QuoteService {
         },
         items: {
           include: {
-            product: true,
+            product: { include: { prices: { take: 1, orderBy: { createdAt: 'desc' } } } },
           },
         },
-        versions: {
-          orderBy: { versionNumber: 'desc' },
+        customerQuotes: {
+          orderBy: { createdAt: 'desc' },
         },
         supplierQuotes: {
           include: {
@@ -227,6 +273,11 @@ export class QuoteService {
             items: true,
           },
         },
+        project: {
+          include: {
+            members: true
+          }
+        }
       },
     });
 
@@ -234,11 +285,35 @@ export class QuoteService {
       throw { status: 404, message: 'Không tìm thấy yêu cầu báo giá' };
     }
 
-    return quote;
+    return this.maskQuoteRequest(quote, role, userId);
   }
 
   async updateStatus(id: string, tenantId: string, status: string) {
-    // Basic status transition validation could be added here
+    const existing = await prisma.quoteRequest.findFirst({
+      where: { id, tenantId }
+    });
+
+    if (!existing) {
+      throw { status: 404, message: 'Không tìm thấy Yêu cầu báo giá' };
+    }
+
+    const allowedTransitions: { [key: string]: string[] } = {
+      DRAFT: ['SUBMITTED_TO_PURCHASING'],
+      SUBMITTED_TO_PURCHASING: ['PURCHASING_RECEIVED'],
+      PURCHASING_RECEIVED: ['PURCHASING_SOURCING'],
+      PURCHASING_SOURCING: ['PURCHASING_DONE'],
+      PURCHASING_DONE: ['SENT_TO_TL'],
+      SENT_TO_TL: ['TL_REVIEWING'],
+      TL_REVIEWING: ['TL_APPROVED', 'TL_REJECTED', 'CLOSED'],
+      TL_APPROVED: ['DRAFT'], // To allow generating CustomerQuote next
+      TL_REJECTED: ['PURCHASING_SOURCING'],
+    };
+
+    const allowed = allowedTransitions[existing.status];
+    if (allowed && !allowed.includes(status)) {
+      throw { status: 400, message: `Không thể chuyển từ ${existing.status} sang ${status}` };
+    }
+
     return await prisma.quoteRequest.update({
       where: { id, tenantId },
       data: { status },
@@ -253,7 +328,7 @@ export class QuoteService {
     quoteRequestId: string;
     supplierId: string;
     purchasingId: string;
-    items: Array<{ productId: string; quantity: number; unitPrice: number }>;
+    items: Array<{ productId: string; quantity: number; unitPrice: number; originalPrice?: number; discountPercent?: number; taxRate?: number; }>;
     currency?: string;
   }) {
     const { tenantId, quoteRequestId, supplierId, purchasingId, items, currency = 'VND' } = data;
@@ -275,12 +350,34 @@ export class QuoteService {
               productId: item.productId,
               quantity: new Decimal(item.quantity),
               unitPrice: new Decimal(item.unitPrice),
+              originalPrice: item.originalPrice !== undefined ? new Decimal(item.originalPrice) : null,
+              discountPercent: item.discountPercent !== undefined ? new Decimal(item.discountPercent) : null,
+              taxRate: item.taxRate !== undefined ? new Decimal(item.taxRate) : null,
             }))
           }
-        }
+        },
+        include: { items: true }
       });
 
-      // 2. Update Quote Request status to reflect progress
+      // 2. Auto-save prices to ProductPrice history
+      for (const item of supplierQuote.items) {
+        await tx.productPrice.create({
+          data: {
+            tenantId,
+            productId: item.productId,
+            supplierId,
+            originalPrice: item.originalPrice || item.unitPrice,
+            discountPercent: item.discountPercent,
+            unitPrice: item.unitPrice,
+            taxRate: item.taxRate,
+            currency,
+            source: 'supplier_quote',
+            sourceRefId: item.id,
+          }
+        });
+      }
+
+      // 3. Update Quote Request status to reflect progress
       await tx.quoteRequest.update({
         where: { id: quoteRequestId, tenantId },
         data: { status: 'SUPPLIER_PRICE_COLLECTED' }
@@ -318,6 +415,39 @@ export class QuoteService {
         }
       });
     });
+  }
+
+  maskQuoteRequest(quote: any, role?: string, userId?: string) {
+    if (!role) return quote;
+    
+    // Kiểm tra quyền ghi đè (override) trong dự án
+    if (quote.project && quote.project.members && userId) {
+      const member = quote.project.members.find((m: any) => m.userId === userId);
+      if (member && member.permissions) {
+        try {
+          const extraPerms = JSON.parse(member.permissions);
+          if (extraPerms.includes('view_all_prices')) {
+            return quote; // Bỏ qua mặt nạ bảo mật
+          }
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+    }
+
+    if (role === 'TECHNICAL') {
+      if (quote.items) {
+        quote.items = quote.items.map((item: any) => ({
+          ...item,
+          targetPrice: null,
+          finalPrice: null
+        }));
+      }
+      quote.subTotal = null;
+      quote.taxAmount = null;
+      quote.totalAmount = null;
+    }
+    return quote;
   }
 }
 
